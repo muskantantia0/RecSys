@@ -37,16 +37,16 @@ music_rating_matrix <- spread(music,Product,Rating)
 music_user_product_rating <- sqldf("select * from music where Product in (select Product from music group by Product having count(Product)>20)")
 music_rating_product_matrix <- spread(music_user_product_rating,Product,Rating)
 
-## This has very less data.
 
-
-data <- music_rating_product_matrix[,-1]
-
-## Correlation Matrix.
-## Using the data_frame music_rating_matrix_product 
+# We are using Correlation to predict the user ratings using Item_Item Similarity Matrix
 
 #Creating a dummy matrix
-matrix_probabilty <- matrix(data = NA, nrow=5,ncol=5, dimnames = list(c(colnames(data)),c(colnames(data))))
+matrix_correlation <- matrix(data = NA, nrow=5,ncol=5, dimnames = list(c(colnames(data)),c(colnames(data))))
+
+music_rating_product_matrix <- spread(music_user_product_rating,Product,Rating,fill=0)
+
+# Removing the users from this space
+data <- music_rating_product_matrix[,-1]
 
 # Calculating the correlations.
 for (i in 1:length(data)){
@@ -56,37 +56,55 @@ for (i in 1:length(data)){
     colnames(frame)<- c("P1","P2")
     mean1 <- mean(frame$P1,na.rm = TRUE)
     mean2 <- mean(frame$P2,na.rm = TRUE)
-    frame <- na.omit(frame)
-    frame$P1 <- frame$P1 - mean1
-    frame$P2 <- frame$P2 - mean2
     frame <- mutate(frame, Product = P1 * P2)
-    frame <- mutate(frame, Productsq = (P1^2)*(P2^2))
-    matrix_probabilty[i,j] <- sum(frame$Product)/sum(frame$Productsq) 
+    frame <- mutate(frame, P1sq = (P1^2))
+    frame <- mutate(frame, P2sq = (P2^2))
+    matrix_correlation[i,j] <- sum(frame$Product)/((sum(frame$P1sq))^0.5*(sum(frame$P2sq))^0.5)
   }
 }
 
-## Adjusted Cosine Matrix.
-## Using the data_frame music_rating_matrix_product 
-#Creating a dummy matrix
-matrix_cosine <- matrix(data = NA, nrow=5,ncol=5, dimnames = list(c(colnames(data)),c(colnames(data))))
-
-data_cos <- data
-# Calculating the correlations.
-data_cos <- mutate(data_cos, meanrow= rowMeans(data_cos,na.rm = TRUE) )
-data_cos <- data_cos[,1:5]-data_cos$meanrow
 
 
-for (i in 1:length(data_cos)){
-  for( j in 1:length(data_cos)){
-    frame <- cbind(data_cos[,i],data_cos[,j])
-    frame <- data.frame(frame)
-    colnames(frame)<- c("P1","P2")
-    frame <- na.omit(frame)
-    frame <- mutate(frame, Product = P1 * P2)
-    frame <- mutate(frame, Productsq = (P1^2)*(P2^2))
-    matrix_cosine[i,j] <- sum(frame$Product)/sum(frame$Productsq) 
+# Predictions 
+# We are creating 2 data frames. One to compute values and the other to impute the predicted values
+data_withoutNA <- spread(music_user_product_rating,Product,Rating,fill=0)
+data_withoutNA <- data_withoutNA[,-1]
+data_predict <- spread(music_user_product_rating,Product,Rating)
+data_predict <- data_predict[,-1]
+
+
+# Assumption
+# We are taking only the top 3 similar products for each and every product.
+
+for ( i in 1:nrow(data)){
+  for ( j in 1:ncol(data)){
+    if(is.na(data[i,j]) == TRUE){
+      matrix1row <- matrix_correlation[j,]
+      matrix1row <- c(matrix1row)
+      matrix1row <- sort(matrix1row,decreasing = TRUE)
+      matrix1row <- matrix1row[2:(2+2)]
+      p <- which(matrix_correlation[j,] == matrix1row[1])
+      q <- which(matrix_correlation[j,] == matrix1row[2])
+      r <- which(matrix_correlation[j,] == matrix1row[3])
+      data_predict[i,j] <- ((data_withoutNA[i,p]*matrix_correlation[j,p])+
+                              (data_withoutNA[i,p]*matrix_correlation[j,q])+
+                              (data_withoutNA[i,p]*matrix_correlation[j,r]))/(matrix_correlation[j,p]+
+                                                                                matrix_correlation[j,q]+
+                                                                                matrix_correlation[j,r])
+      
+    }
   }
 }
 
-## This will give us a matrix of similarity correlation using Adjusted Cosine formula
+## data_predict data.frame has imputed ratings for each and every product for each user.
+## Since the data is too less , our algo has predicted 0 rating for some users.
+
+
+
+
+
+
+
+
+
 
