@@ -73,6 +73,14 @@ for ( i in 1:nrow(Predictions)){
       else{
         m <-m[-z]
       }
+      m <- pearson_correlation[j,c(names(m))]
+      z <- which(is.na(pearson_correlation[j,c(names(m))]))
+      if(length(z) == 0){
+        m <- m
+      }
+      else{
+        m <-m[-z]
+      }
       Predictions[i,j]<-((abs(pearson_correlation[j,names(m)]) %*% t(ratingsdummydata[i,names(m)])))/sum(abs(pearson_correlation[j,names(m)]))
     }
     else{
@@ -110,4 +118,4 @@ Username <- function(x){
   }
 }
 
-# Only with number it is working 
+# 1. How is NaN different from NA in Correlation Matrix and how does it effect your Prediction?
