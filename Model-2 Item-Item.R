@@ -87,8 +87,13 @@ Username <- function(x){
   UserPredictions <- Predictions[x,2:ncol(Predictions)]
   meanuserrating <- mean(as.matrix(ratingsdummydata[x,2:ncol(ratingsdummydata)]),na.rm = TRUE)
   GreaterthanMeanNum <- which(Predictions[x,2:ncol(Predictions)] <= meanuserrating)
-  UserPredictions <- UserPredictions[-(GreaterthanMeanNum)]
-  UserPredictions <- sort(UserPredictions[-which(is.na(UserPredictions))],decreasing = TRUE)
+  if(length(GreaterthanMeanNum) == 0){
+    UserPredictions <- UserPredictions[colSums(!is.na(UserPredictions)) > 0]
+    UserPredictions <- sort(UserPredictions,decreasing = TRUE)
+  }else{
+    UserPredictions <- UserPredictions[-(GreaterthanMeanNum)]
+    UserPredictions <- sort(UserPredictions[-which(is.na(UserPredictions))],decreasing = TRUE)
+  }
   if(length(UserPredictions) == 0){
     return("No Predictions")
   }
@@ -97,4 +102,4 @@ Username <- function(x){
   }
 }
 
-# Only with number it is working 
+# Only with number it is working. 
