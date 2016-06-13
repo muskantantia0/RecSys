@@ -111,15 +111,3 @@ Username <- function(x){
 }
 
 # Only with number it is working 
-Username(1)
-Username(2)
-Username(3)
-Username(4)
-Username(5)
-Username(6)
-Username(7)
-Username(8)
-Username(9)
-Username(10)
-
-
