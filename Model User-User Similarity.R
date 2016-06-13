@@ -65,6 +65,7 @@ for ( i in 1:nrow(Predictions)){
       matrix1row <- pearson_correlation[j,]
       matrix1row <- matrix1row[-x]
       matrix1row <- sort(matrix1row,decreasing = TRUE)
+      # Finding and removing the columns where NA's are there in correlation matrix and ratingsdummydata.
       m <- ratingsdummydata[i,c(names(matrix1row))]
       z <- which(is.na(ratingsdummydata[i,c(names(matrix1row))]))
       if(length(z) == 0){
@@ -91,9 +92,11 @@ for ( i in 1:nrow(Predictions)){
 
 #Final Predictions
 # Two DataFrames
-# Itemsratingsdummydata - User rated ratings
+# ratingsdummydata - User rated ratings
 # Predictions           - User Predicted Ratings
 Predictions <- t(Predictions)
+
+# Converting the NaN's into NA values for easy off Predictions.
 Predictions <- as.matrix(Predictions)
 Predictions[is.nan(Predictions)] <- NA
 Predictions <- as.data.frame(Predictions)
@@ -118,4 +121,5 @@ Username <- function(x){
   }
 }
 
-# 1. How is NaN different from NA in Correlation Matrix and how does it effect your Prediction?
+# The Code Works fine and handles the NA values but the Question which is left is ?
+# 1. How is NaN different from NA in Correlation Matrix and how does it effect our Prediction?
