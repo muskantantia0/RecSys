@@ -15,11 +15,11 @@ rownames(ratingsdummydata) <- ratingsdummydata[,1]
 ratingsdummydata <- ratingsdummydata[,-1]
 str(ratingsdummydata)
 
-#Create a dummy martix 
-movies <- as.list(colnames(ratingsdummydata))
-pearson_correlation <- matrix(data = NA , nrow = ncol(ratingsdummydata), ncol = ncol(ratingsdummydata), dimnames = list(c(movies),c(movies)))
 
-#Creating another data frame by removing users from the previous ratingsdummydata
+#Create a dummy martix 
+Users <- as.list(colnames(ratingsdummydata))
+pearson_correlation <- matrix(data = NA , nrow = ncol(ratingsdummydata), ncol = ncol(ratingsdummydata), dimnames = list(c(Users),c(Users)))
+
 
 
 # Calculate the correlations 
@@ -30,16 +30,22 @@ for(i in 1:length(ratingsdummydata)){
     data <- cbind(P1,P2)
     data <- data.frame(data)
     data <- na.omit(data)
-    mean1 <- mean(data$P1,na.rm = TRUE)
-    mean2 <- mean(data$P2,na.rm = TRUE)
-    data$P1 <- data$P1 - mean1
-    data$P2 <- data$P2 - mean2
-    data <- mutate(data, P1P2 = P1*P2)
-    data <- mutate(data, P1sq = P1^2)
-    data <- mutate(data, P2sq = P2^2)
-    pearson_correlation[i,j] <- sum(data$P1P2)/((sum(data$P1sq)*sum(data$P2sq))^0.5)
-    P1 <- NULL
-    P2 <- NULL
+    if(length(data) == 0){
+      pearson_correlation[i,j] <- NA
+    }
+    else{
+      mean1 <- mean(data$P1,na.rm = TRUE)
+      mean2 <- mean(data$P2,na.rm = TRUE)
+      data$P1 <- data$P1 - mean1
+      data$P2 <- data$P2 - mean2
+      data <- mutate(data, P1P2 = P1*P2)
+      data <- mutate(data, P1sq = P1^2)
+      data <- mutate(data, P2sq = P2^2)
+      pearson_correlation[i,j] <- sum(data$P1P2)/((sum(data$P1sq)*sum(data$P2sq))^0.5)
+      P1 <- NULL
+      P2 <- NULL
+    }
+    
   }
 }
 
@@ -58,6 +64,7 @@ for ( i in 1:nrow(Predictions)){
       matrix1row <- pearson_correlation[j,]
       matrix1row <- matrix1row[-x]
       matrix1row <- sort(matrix1row,decreasing = TRUE)
+      # Finding and removing the columns where NA's are there in correlation matrix and ratingsdummydata.
       m <- ratingsdummydata[i,c(names(matrix1row))]
       z <- which(is.na(ratingsdummydata[i,c(names(matrix1row))]))
       if(length(z) == 0){
@@ -66,8 +73,15 @@ for ( i in 1:nrow(Predictions)){
       else{
         m <-m[-z]
       }
-      meanmovie <- mean(ratingsdummydata[,j],na.rm=TRUE)
-      Predictions[i,j]<-meanmovie+((pearson_correlation[j,names(m)] %*% t(ratingsdummydata[i,names(m)]-meanmovie)))/sum(abs(pearson_correlation[j,names(m)]))
+      m <- pearson_correlation[j,c(names(m))]
+      z <- which(is.na(pearson_correlation[j,c(names(m))]))
+      if(length(z) == 0){
+        m <- m
+      }
+      else{
+        m <-m[-z]
+      }
+      Predictions[i,j]<-((abs(pearson_correlation[j,names(m)]) %*% t(ratingsdummydata[i,names(m)])))/sum(abs(pearson_correlation[j,names(m)]))
     }
     else{
       Predictions[i,j] <- NA
@@ -76,6 +90,7 @@ for ( i in 1:nrow(Predictions)){
 }
 
 #Final Predictions
+
 # Two DataFrames
 # Itemsratingsdummydata - User rated ratings
 # Predictions           - User Predicted Ratings
@@ -100,6 +115,15 @@ Username <- function(x){
   }
 }
 
-
-
 # Only with number it is working 
+Username(1)
+Username(2)
+Username(3)
+Username(4)
+Username(5)
+Username(6)
+Username(7)
+Username(8)
+Username(9)
+Username(10)
+
